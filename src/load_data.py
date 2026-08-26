@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 from IPython import display
+from IPython.display import display
 
 DATA_DIR = Path("../data")
 DATA_DIR.mkdir(exist_ok=True)
@@ -34,24 +35,18 @@ def load_parquet_data(path: str | Path) -> pd.DataFrame:
 
 
 def data_info(df: pd.DataFrame):
-    # Размер таблицы.
     print("Размер таблицы:", df.shape)
 
-    # Названия столбцов.
     print("\nНазвания столбцов:")
     print(df.columns.tolist())
 
-    # Типы данных.
     print("\nТипы данных:")
     print(df.dtypes)
 
-    # Проверка пропусков.
     print("\nПропуски по столбцам:")
     print(df.isna().sum())
 
-    # Описательная статистика.
-    print("\nОписательная статистика:")
-    display(df.describe())
+
 
 
 import time
@@ -60,15 +55,10 @@ from pathlib import Path
 
 import orjson
 import pandas as pd
-from tqdm import tqdm
-
-# Активируем поддержку прогресса для .apply()
-tqdm.pandas(desc="Применение функций")
 
 
 def json_to_parquet(
-    input_data_path: str = "d:\\Downloads\\mfp-diaries.tsv\\mfp-diaries.tsv",
-    output_parquet_path: str = "d:\\study\\excel\\block05_exam_project\\data\\diaries.parquet",
+    input_data_path: str | Path, output_parquet_path: str | Path
 ) -> None:
     start_time = time.time()
     print(f"Начало: {time.strftime('%Y-%m-%d %H:%M:%S')}")
@@ -93,7 +83,6 @@ def json_to_parquet(
         result = pd.concat(
             [df_raw[[0, 1]].rename(columns={0: "user_id", 1: "date"}), total_df], axis=1
         )
-        result["weekday"] = result["date"].dt.weekday
 
     with step("Сохранение Parquet"):
         Path(output_parquet_path).parent.mkdir(parents=True, exist_ok=True)
@@ -101,7 +90,9 @@ def json_to_parquet(
 
     elapsed = time.time() - start_time
     print(f"Готово! Σ время: {elapsed:.2f}")
-    print(f"Записей: {len(result)}")    
+    print(f"Записей: {len(result)}")
+
+    return result
 
 
 def get_total_dict(parsed: dict):
@@ -109,11 +100,10 @@ def get_total_dict(parsed: dict):
     return {item["name"]: item["value"] for item in total}
 
 
-COLOR_PURPLE = "\033[95m"  # фиолетовый
-COLOR_GREEN = "\033[92m"  # зелёный
+COLOR_PURPLE = "\033[95m"
+COLOR_GREEN = "\033[92m"
 COLOR_RESET = "\033[0m"
 
-# Фиксированная ширина для названия (подберите под свои шаги)
 STEP_WIDTH = 30
 
 
@@ -122,7 +112,7 @@ def step(name):
     print(f"→ {COLOR_PURPLE}{name:<{STEP_WIDTH}}{COLOR_RESET}", end="", flush=True)
     start = time.time()
     yield
-    elapsed = time.time() - start    
+    elapsed = time.time() - start
     print(
         f"\r√ {COLOR_PURPLE}{name:<{STEP_WIDTH}}{COLOR_RESET}{COLOR_GREEN}{elapsed:.2f}{COLOR_RESET}\n",
         end="",
