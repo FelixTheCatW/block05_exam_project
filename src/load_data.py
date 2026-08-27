@@ -28,7 +28,7 @@ def load_parquet_data(path: str | Path) -> pd.DataFrame:
     if not path.exists():
         raise FileNotFoundError(f"Файл не найден: {path}")
 
-    df = pd.read_parquet(DATA_DIR / "diaries.parquet")
+    df = pd.read_parquet(path)
     initial_len = len(df)
     print(f"Данный загружены: {initial_len} строк")
     return df

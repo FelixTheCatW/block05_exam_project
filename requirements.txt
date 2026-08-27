@@ -3,3 +3,9 @@ openpyxl
 matplotlib
 jupyter
 pytest
+tqdm
+orjson
+pyarrow
+fastparquet
+numpy
+ipython

@@ -1,5 +1,5 @@
-from clean_data import *
-from load_data import *
+from src.clean_data import *
+from src.load_data import *
 
 src_csv_data: str = Path("d:\\Downloads\\mfp-diaries.tsv\\mfp-diaries.tsv")
 src_parquet_data: str = Path(
