@@ -1,23 +1,25 @@
+import colorsys
 import time
 from contextlib import contextmanager
 
-COLOR_PURPLE = "\033[95m"
-COLOR_GREEN = "\033[92m"
-COLOR_RESET = "\033[0m"
+from rich.color import Color
+from rich.console import Console
+from rich.live import Live
+from rich.style import Style
+from rich.text import Text
 
-STEP_WIDTH = 30
+console = Console()
 
 @contextmanager
 def step(name, wait=False):
-    print(f"→ {COLOR_PURPLE}{name:<{STEP_WIDTH}}{COLOR_RESET}", end="", flush=True)
-    start = time.time()
-    yield
-    elapsed = time.time() - start
-    print(
-        f"\r√ {COLOR_PURPLE}{name:<{STEP_WIDTH}}{COLOR_RESET}{COLOR_GREEN}{elapsed:.2f}{COLOR_RESET}\n",
-        end="",
-    )
-    
+    with console.status(f"[bold purple]{name}[/bold purple]") as status:
+        start = time.time()
+        yield
+        elapsed = time.time() - start
+        # status.update(f"[bold green]√ {name} за {elapsed:.2f} с)[/bold green]")
+        console.print(
+            f"[bold purple]√ {name}[/bold purple]....[bold green]{elapsed:.2f} с[/bold green]"
+        )
     if wait:
         input("Нажмите любую клавишу для продолжения...")
-        print("\n") 
+        print("\033[F\033[K", end="", flush=True)

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def filter_outliers_iqr_all(
+def filter_outliers(
     df: pd.DataFrame, cols: [str] = ['calories'], multiplier=1.5
 ) -> pd.DataFrame:
     """
@@ -97,3 +97,4 @@ def add_computed_columns(df: pd.DataFrame) -> pd.DataFrame:
     df["high_protein"] = df["pct_cal_protein"] > 30
     
     return df
+

@@ -2,38 +2,45 @@ from functools import partial
 from pathlib import Path
 
 from IPython.display import display
-
+from rich.console import Console
+from rich.table import Table
 import src.clean_data as clean
 import src.load_data as load
 from src import analysis
 from src.utils import excel_utils
 from src.utils.pipe import Pipe
 from src.utils.step import step
+from rich.panel import Panel
+
+console = Console()
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 REPORTS_DIR = Path(__file__).resolve().parent.parent / "reports"
 SRC_DATA = Path("d:\\Downloads\\mfp-diaries.tsv\\mfp-diaries.tsv")
 PARQUET_PATH = DATA_DIR / "diaries.parquet"
+WAIT_FOR_INPUT = True
 
 def main() -> None:
-    REPORTS_DIR.mkdir(exist_ok=True)
-
-    with step("1. Загрузка данных...", wait=True):
+    print("Добрый день.")
+    print("Ввод чтобы начать")
+    input()
+    with step("1. Загрузка данных", wait=WAIT_FOR_INPUT):
         if not PARQUET_PATH.exists():
             load.json_to_parquet(SRC_DATA, PARQUET_PATH)
-            
-        df = load.load_parquet_data(PARQUET_PATH)    
+
+        df = load.load_parquet_data(PARQUET_PATH)
 
     df_holder = Pipe(df)
-    
-    with step("2. Очистка данных...", True):
-        df_holder = df_holder | clean.lower_columns | clean.drop_mistakes | clean.filter_outliers_iqr_all
-    
-    with step("3. Вычисляемые колонки...", True):
+
+    with step("2. Очистка данных", WAIT_FOR_INPUT):
+        df_holder = df_holder | clean.lower_columns | clean.drop_mistakes | clean.filter_outliers
+
+    with step("3. Вычисляемые колонки", WAIT_FOR_INPUT):
         df_holder = df_holder | clean.add_computed_columns | clean.add_weekday
-        
+
     df = df_holder.get()
-    with step("4. Анализ...", True):
+    
+    with step("4. Анализ", True):
         stats = analysis.summary_stats(df)
         by_weekday = analysis.calories_by_weekday(df)
         by_category = analysis.macros_by_category(df)
@@ -44,20 +51,15 @@ def main() -> None:
         norm_cat = analysis.normalized_by_category(df)
         norm_weekday = analysis.normalized_by_weekday(df)
 
-        print("Описательная статистика:")
-        display(stats)
-        print("Калории по дням недели:")
-        display(by_weekday)
-        print("Макронутриенты по категориям:")
-        display(by_category)
-        print("Анализ белка:")
-        display(by_protein)
-        print("Нормализация на 1000 ккал по категориям:")
-        display(norm_cat)
-        print("Нормализация на 1000 ккал по дням недели:")
-        display(norm_weekday)    
-    
-    with step("5. Сохранение CSV-отчётов...", True):
+    print_table(stats, "Описательная статистика")
+    print_table(by_weekday, "Калории по дням недели")
+    print_table(by_category, "Макронутриенты по категориям")
+    print_table(by_protein, "Анализ белка")
+    print_table(norm_cat, "Нормализация на 1000 ккал по категориям")
+    print_table(norm_weekday, "Нормализация на 1000 ккал по дням недели")
+
+    with step("5. Сохранение CSV-отчётов", True):
+        REPORTS_DIR.mkdir(exist_ok=True)
         by_weekday.to_csv(REPORTS_DIR / "calories_by_weekday.csv", index=False)
         by_category.to_csv(REPORTS_DIR / "macros_by_category.csv", index=False)
         by_protein.to_csv(REPORTS_DIR / "protein_analysis.csv", index=False)
@@ -67,8 +69,8 @@ def main() -> None:
         stats.to_csv(REPORTS_DIR / "summary_stats.csv")
         norm_cat.to_csv(REPORTS_DIR / "normalized_by_category.csv", index=False)
         norm_weekday.to_csv(REPORTS_DIR / "normalized_by_weekday.csv", index=False)
-        
-    with step("6. Экспорт в Excel (данные + нативные диаграммы)...", True):
+
+    with step("6. Экспорт в Excel с диаграммами", True):
         excel_utils.export_to_excel(
             df,
             stats,
@@ -83,6 +85,32 @@ def main() -> None:
         )
 
     print("Готово! Все отчёты в папке", REPORTS_DIR)
+
+
+import pandas as pd
+
+
+def print_table(df: pd.DataFrame, title:str):
+    # 2. Initialize Rich Console and Table
+    console = Console()
+    table = Table(
+        title=title, show_header=True, header_style="bold magenta"
+    )
+
+    # 3. Add columns (including the index column optionally)
+    table.add_column("Index", style="dim", width=6)
+    for column in df.columns:
+        table.add_column(column)
+
+    # 4. Add rows
+    for index, row in df.iterrows():
+        # Convert all elements to strings to avoid Rich typing errors
+        row_values = [str(index)] + [str(item) for item in row]
+        table.add_row(*row_values)
+
+    # 5. Print to console
+    console.print(table)
+
 
 if __name__ == "__main__":
     main()

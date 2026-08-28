@@ -19,7 +19,7 @@ def load_parquet_data(path: str | Path) -> pd.DataFrame:
 
     df = pd.read_parquet(path)
     initial_len = len(df)
-    print(f"Данный загружены: {initial_len} строк")
+    print(f"Данные загружены: {initial_len} строк")
     return df
 
 
