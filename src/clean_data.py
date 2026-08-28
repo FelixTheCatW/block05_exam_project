@@ -3,7 +3,7 @@ import pandas as pd
 
 
 def filter_outliers_iqr_all(
-    df: pd.DataFrame, cols: [str], multiplier=1.5
+    df: pd.DataFrame, cols: [str] = ['calories'], multiplier=1.5
 ) -> pd.DataFrame:
     """
     Удаляет выбросы.
@@ -54,11 +54,12 @@ def lower_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def add_weekday(df: pd.DataFrame) -> None:
+def add_weekday(df: pd.DataFrame) -> pd.DataFrame:
     df["weekday"] = df["date"].dt.weekday
+    return df
 
 
-def add_computed_columns(df: pd.DataFrame) -> None:
+def add_computed_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
     Добавляет вычисляемые колонки на основе fat, carbs, protein, calories.
     Изменяет DataFrame на месте.
@@ -69,7 +70,7 @@ def add_computed_columns(df: pd.DataFrame) -> None:
     df["pct_cal_protein"] = (df["protein"] * 4) / df["calories"] * 100
 
     
-    print("Добавил рпасчетные колонки - граммы на 1000 ккал")
+    print("Добавил расчетные колонки - граммы на 1000 ккал")
     df["fat_per_1k"] = df["fat"] / (df["calories"] / 1000)
     df["carbs_per_1k"] = df["carbs"] / (df["calories"] / 1000)
     df["protein_per_1k"] = df["protein"] / (df["calories"] / 1000)
@@ -94,3 +95,5 @@ def add_computed_columns(df: pd.DataFrame) -> None:
 
     print("Добавил расчетную колонку - флаг высокого белка (>30% от калорий)")
     df["high_protein"] = df["pct_cal_protein"] > 30
+    
+    return df

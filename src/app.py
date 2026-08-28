@@ -1,48 +1,88 @@
-from src.clean_data import *
-from src.load_data import *
+from functools import partial
+from pathlib import Path
 
-src_csv_data: str = Path("d:\\Downloads\\mfp-diaries.tsv\\mfp-diaries.tsv")
-src_parquet_data: str = Path(
-    "d:\\study\\excel\\block05_exam_project\\data\\diaries.parquet"
-)
+from IPython.display import display
 
-if not src_parquet_data.exists():
-    df = json_to_parquet(src_csv_data, src_parquet_data)
+import src.clean_data as clean
+import src.load_data as load
+from src import analysis
+from src.utils import excel_utils
+from src.utils.pipe import Pipe
+from src.utils.step import step
 
-df = load_parquet_data(src_parquet_data)
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+REPORTS_DIR = Path(__file__).resolve().parent.parent / "reports"
+SRC_DATA = Path("d:\\Downloads\\mfp-diaries.tsv\\mfp-diaries.tsv")
+PARQUET_PATH = DATA_DIR / "diaries.parquet"
 
-df = lower_columns(df)
-df = drop_mistakes(df)
-df = filter_outliers_iqr_all(df, ["calories"])
+def main() -> None:
+    REPORTS_DIR.mkdir(exist_ok=True)
 
-add_computed_columns(df)
-add_weekday(df)
-df = df[
-    [
-        "user_id",
-        "date",
-        "weekday",
-        "calories",
-        "carbs",
-        "fat",
-        "protein",
-        "pct_cal_fat",
-        "pct_cal_carbs",
-        "pct_cal_protein",
-        "fat_per_1k",
-        "carbs_per_1k",
-        "protein_per_1k",
-        "fat_to_carbs",
-        "protein_to_fat",
-        "carbs_to_protein",
-        "cal_category",
-        "high_protein",
-    ]
-]
-data_info(df)
+    with step("1. Загрузка данных...", wait=True):
+        if not PARQUET_PATH.exists():
+            load.json_to_parquet(SRC_DATA, PARQUET_PATH)
+            
+        df = load.load_parquet_data(PARQUET_PATH)    
 
-print("Описательная статистика:")
-display(df[["fat", "carbs", "protein", "calories"]].describe())
+    df_holder = Pipe(df)
+    
+    with step("2. Очистка данных...", True):
+        df_holder = df_holder | clean.lower_columns | clean.drop_mistakes | clean.filter_outliers_iqr_all
+    
+    with step("3. Вычисляемые колонки...", True):
+        df_holder = df_holder | clean.add_computed_columns | clean.add_weekday
+        
+    df = df_holder.get()
+    with step("4. Анализ...", True):
+        stats = analysis.summary_stats(df)
+        by_weekday = analysis.calories_by_weekday(df)
+        by_category = analysis.macros_by_category(df)
+        by_protein = analysis.protein_analysis(df)
+        pivot_cat = analysis.pivot_weekday_category(df)
+        pivot_prot = analysis.pivot_weekday_protein(df)
+        corr = analysis.correlation_matrix(df)
+        norm_cat = analysis.normalized_by_category(df)
+        norm_weekday = analysis.normalized_by_weekday(df)
 
+        print("Описательная статистика:")
+        display(stats)
+        print("Калории по дням недели:")
+        display(by_weekday)
+        print("Макронутриенты по категориям:")
+        display(by_category)
+        print("Анализ белка:")
+        display(by_protein)
+        print("Нормализация на 1000 ккал по категориям:")
+        display(norm_cat)
+        print("Нормализация на 1000 ккал по дням недели:")
+        display(norm_weekday)    
+    
+    with step("5. Сохранение CSV-отчётов...", True):
+        by_weekday.to_csv(REPORTS_DIR / "calories_by_weekday.csv", index=False)
+        by_category.to_csv(REPORTS_DIR / "macros_by_category.csv", index=False)
+        by_protein.to_csv(REPORTS_DIR / "protein_analysis.csv", index=False)
+        pivot_cat.to_csv(REPORTS_DIR / "pivot_weekday_category.csv")
+        pivot_prot.to_csv(REPORTS_DIR / "pivot_weekday_protein.csv")
+        corr.to_csv(REPORTS_DIR / "correlation_matrix.csv")
+        stats.to_csv(REPORTS_DIR / "summary_stats.csv")
+        norm_cat.to_csv(REPORTS_DIR / "normalized_by_category.csv", index=False)
+        norm_weekday.to_csv(REPORTS_DIR / "normalized_by_weekday.csv", index=False)
+        
+    with step("6. Экспорт в Excel (данные + нативные диаграммы)...", True):
+        excel_utils.export_to_excel(
+            df,
+            stats,
+            by_weekday,
+            by_category,
+            pivot_cat,
+            pivot_prot,
+            corr,
+            norm_cat,
+            norm_weekday,
+            REPORTS_DIR / "analysis_report.xlsx",
+        )
 
+    print("Готово! Все отчёты в папке", REPORTS_DIR)
 
+if __name__ == "__main__":
+    main()
