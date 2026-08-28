@@ -91,24 +91,19 @@ import pandas as pd
 
 
 def print_table(df: pd.DataFrame, title:str):
-    # 2. Initialize Rich Console and Table
-    console = Console()
+    # console = Console()
     table = Table(
         title=title, show_header=True, header_style="bold magenta"
     )
-
-    # 3. Add columns (including the index column optionally)
+    
     table.add_column("Index", style="dim", width=6)
     for column in df.columns:
         table.add_column(column)
 
-    # 4. Add rows
     for index, row in df.iterrows():
-        # Convert all elements to strings to avoid Rich typing errors
         row_values = [str(index)] + [str(item) for item in row]
         table.add_row(*row_values)
 
-    # 5. Print to console
     console.print(table)
 
 
