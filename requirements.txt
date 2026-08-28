@@ -1,11 +1,12 @@
 pandas
+numpy
 openpyxl
 matplotlib
+seaborn
 jupyter
 pytest
-tqdm
+ipython
 orjson
 pyarrow
-fastparquet
 numpy
 ipython

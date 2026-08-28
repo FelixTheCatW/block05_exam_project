@@ -1,20 +1,9 @@
-import json
+import time
+from contextlib import contextmanager
 from pathlib import Path
 
+import orjson
 import pandas as pd
-from IPython import display
-from IPython.display import display
-
-DATA_DIR = Path("../data")
-DATA_DIR.mkdir(exist_ok=True)
-
-REPORTS_DIR = Path("../reports")
-REPORTS_DIR.mkdir(exist_ok=True)
-
-assert DATA_DIR.exists()
-assert REPORTS_DIR.exists()
-
-print("Окружение готово.")
 
 
 def load_parquet_data(path: str | Path) -> pd.DataFrame:
@@ -45,16 +34,6 @@ def data_info(df: pd.DataFrame):
 
     print("\nПропуски по столбцам:")
     print(df.isna().sum())
-
-
-
-
-import time
-from contextlib import contextmanager
-from pathlib import Path
-
-import orjson
-import pandas as pd
 
 
 def json_to_parquet(
