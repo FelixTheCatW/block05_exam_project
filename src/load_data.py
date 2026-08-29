@@ -1,20 +1,13 @@
 import json
+import time
 from pathlib import Path
 
+import orjson
 import pandas as pd
 from IPython import display
 from IPython.display import display
 
-DATA_DIR = Path("../data")
-DATA_DIR.mkdir(exist_ok=True)
-
-REPORTS_DIR = Path("../reports")
-REPORTS_DIR.mkdir(exist_ok=True)
-
-assert DATA_DIR.exists()
-assert REPORTS_DIR.exists()
-
-print("Окружение готово.")
+from src.utils.step import step
 
 
 def load_parquet_data(path: str | Path) -> pd.DataFrame:
@@ -30,7 +23,7 @@ def load_parquet_data(path: str | Path) -> pd.DataFrame:
 
     df = pd.read_parquet(path)
     initial_len = len(df)
-    print(f"Данный загружены: {initial_len} строк")
+    print(f"Данные загружены: {initial_len} строк")
     return df
 
 
@@ -45,16 +38,6 @@ def data_info(df: pd.DataFrame):
 
     print("\nПропуски по столбцам:")
     print(df.isna().sum())
-
-
-
-
-import time
-from contextlib import contextmanager
-from pathlib import Path
-
-import orjson
-import pandas as pd
 
 
 def json_to_parquet(
@@ -98,22 +81,3 @@ def json_to_parquet(
 def get_total_dict(parsed: dict):
     total = parsed.get("total", [])
     return {item["name"]: item["value"] for item in total}
-
-
-COLOR_PURPLE = "\033[95m"
-COLOR_GREEN = "\033[92m"
-COLOR_RESET = "\033[0m"
-
-STEP_WIDTH = 30
-
-
-@contextmanager
-def step(name):
-    print(f"→ {COLOR_PURPLE}{name:<{STEP_WIDTH}}{COLOR_RESET}", end="", flush=True)
-    start = time.time()
-    yield
-    elapsed = time.time() - start
-    print(
-        f"\r√ {COLOR_PURPLE}{name:<{STEP_WIDTH}}{COLOR_RESET}{COLOR_GREEN}{elapsed:.2f}{COLOR_RESET}\n",
-        end="",
-    )
