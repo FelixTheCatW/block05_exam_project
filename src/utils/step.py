@@ -12,13 +12,13 @@ console = Console()
 
 @contextmanager
 def step(name, wait=False):
-    with console.status(f"[bold purple]{name}[/bold purple]") as status:
+    with console.status(f"[purple]{name}[/purple]") as status:
         start = time.time()
         yield
         elapsed = time.time() - start
         # status.update(f"[bold green]√ {name} за {elapsed:.2f} с)[/bold green]")
         console.print(
-            f"[bold purple]√ {name}[/bold purple]....[bold green]{elapsed:.2f} с[/bold green]"
+            f"[purple]√ {name}[/purple]....[green]{elapsed:.2f} с[/green]"
         )
     if wait:
         input("Нажмите любую клавишу для продолжения...")

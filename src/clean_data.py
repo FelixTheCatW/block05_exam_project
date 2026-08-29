@@ -54,20 +54,12 @@ def lower_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-<<<<<<< HEAD
 def add_weekday(df: pd.DataFrame) -> pd.DataFrame:
     df["weekday"] = df["date"].dt.weekday
     return df
 
 
 def add_computed_columns(df: pd.DataFrame) -> pd.DataFrame:
-=======
-def add_weekday(df: pd.DataFrame) -> None:
-    df["weekday"] = df["date"].dt.weekday
-
-
-def add_computed_columns(df: pd.DataFrame) -> None:
->>>>>>> origin/main
     """
     Добавляет вычисляемые колонки на основе fat, carbs, protein, calories.
     Изменяет DataFrame на месте.
@@ -78,11 +70,7 @@ def add_computed_columns(df: pd.DataFrame) -> None:
     df["pct_cal_protein"] = (df["protein"] * 4) / df["calories"] * 100
 
     
-<<<<<<< HEAD
     print("Добавил расчетные колонки - граммы на 1000 ккал")
-=======
-    print("Добавил рпасчетные колонки - граммы на 1000 ккал")
->>>>>>> origin/main
     df["fat_per_1k"] = df["fat"] / (df["calories"] / 1000)
     df["carbs_per_1k"] = df["carbs"] / (df["calories"] / 1000)
     df["protein_per_1k"] = df["protein"] / (df["calories"] / 1000)
@@ -107,9 +95,6 @@ def add_computed_columns(df: pd.DataFrame) -> None:
 
     print("Добавил расчетную колонку - флаг высокого белка (>30% от калорий)")
     df["high_protein"] = df["pct_cal_protein"] > 30
-<<<<<<< HEAD
     
     return df
 
-=======
->>>>>>> origin/main
