@@ -31,7 +31,6 @@ def export_to_excel(
         pivot_protein.to_excel(writer, sheet_name="Pivot_day_protein")
         corr.to_excel(writer, sheet_name="Корреляция")
 
-        # Диаграммы на листах с данными
         excel.chart_by_weekday(writer.sheets["Пweekday"], by_weekday.shape[0])
         excel.chart_by_category(writer.sheets["Пcategory"], by_category.shape[0])
         excel.chart_category_pie(writer.sheets["Пcategory"], by_category.shape[0])
@@ -51,4 +50,4 @@ def export_to_excel(
             writer.sheets["Данные (первые 200)"], sample.shape[0]
         )
 
-    print(f"Excel-отчёт с нативными диаграммами сохранён: {output_path}")
+    print(f"Excel-отчёт с диаграммами сохранён:\n{output_path}")

@@ -1,9 +1,10 @@
 import time
-from contextlib import contextmanager
 from pathlib import Path
 
 import orjson
 import pandas as pd
+
+from src.utils.step import step
 
 
 def load_parquet_data(path: str | Path) -> pd.DataFrame:
@@ -77,22 +78,3 @@ def json_to_parquet(
 def get_total_dict(parsed: dict):
     total = parsed.get("total", [])
     return {item["name"]: item["value"] for item in total}
-
-
-COLOR_PURPLE = "\033[95m"
-COLOR_GREEN = "\033[92m"
-COLOR_RESET = "\033[0m"
-
-STEP_WIDTH = 30
-
-
-@contextmanager
-def step(name):
-    print(f"→ {COLOR_PURPLE}{name:<{STEP_WIDTH}}{COLOR_RESET}", end="", flush=True)
-    start = time.time()
-    yield
-    elapsed = time.time() - start
-    print(
-        f"\r√ {COLOR_PURPLE}{name:<{STEP_WIDTH}}{COLOR_RESET}{COLOR_GREEN}{elapsed:.2f}{COLOR_RESET}\n",
-        end="",
-    )

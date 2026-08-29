@@ -20,26 +20,28 @@ SRC_DATA = Path("d:\\Downloads\\mfp-diaries.tsv\\mfp-diaries.tsv")
 PARQUET_PATH = DATA_DIR / "diaries.parquet"
 WAIT_FOR_INPUT = True
 
+
 def main() -> None:
     print("Добрый день.")
     print("Ввод чтобы начать")
     input()
-    with step("1. Загрузка данных", wait=WAIT_FOR_INPUT):
-        if not PARQUET_PATH.exists():
-            load.json_to_parquet(SRC_DATA, PARQUET_PATH)
 
+    if not PARQUET_PATH.exists():
+        load.json_to_parquet(SRC_DATA, PARQUET_PATH)
+
+    with step("1. Загрузка данных", wait=WAIT_FOR_INPUT):
         df = load.load_parquet_data(PARQUET_PATH)
 
     df_holder = Pipe(df)
 
     with step("2. Очистка данных", WAIT_FOR_INPUT):
-        df_holder = df_holder | clean.lower_columns | clean.drop_mistakes | clean.filter_outliers
+        df_holder = df_holder | clean.lower_columns | clean.drop_na | clean.filter_outliers
 
     with step("3. Вычисляемые колонки", WAIT_FOR_INPUT):
         df_holder = df_holder | clean.add_computed_columns | clean.add_weekday
 
     df = df_holder.get()
-    
+
     with step("4. Анализ", True):
         stats = analysis.summary_stats(df)
         by_weekday = analysis.calories_by_weekday(df)
@@ -90,12 +92,10 @@ def main() -> None:
 import pandas as pd
 
 
-def print_table(df: pd.DataFrame, title:str):
+def print_table(df: pd.DataFrame, title: str):
     # console = Console()
-    table = Table(
-        title=title, show_header=True, header_style="bold magenta"
-    )
-    
+    table = Table(title=title, show_header=True, header_style="bold magenta")
+
     table.add_column("Index", style="dim", width=6)
     for column in df.columns:
         table.add_column(column)
