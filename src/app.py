@@ -95,7 +95,7 @@ import pandas as pd
 
 def print_table(df: pd.DataFrame, title: str):
     # console = Console()
-    table = Table(title=title, show_header=True, header_style="bold magenta")
+    table = Table(title=title, show_header=True, header_style="magenta")
 
     table.add_column("Index", style="dim", width=6)
     for column in df.columns:
