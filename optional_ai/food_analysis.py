@@ -15,17 +15,12 @@ REPORTS_DIR = Path("reports")
 
 
 def filter_outliers_iqr_all(df, cols, multiplier=1.5):
-    """
-    Фильтрация выбросов по методу межквартильного размаха (IQR).
-    Удаляются строки, где значения выходят за пределы [lower, upper],
-    где lower = max(Q1 - multiplier * IQR, 1), upper = min(Q3 + multiplier * IQR, 10000).
-    """
     mask = pd.Series([True] * len(df))
     for col in cols:
         q1 = df[col].quantile(0.25)
         q3 = df[col].quantile(0.75)
         iqr = q3 - q1
-        upper = min(q3 + multiplier * iqr, 10_000)  # физический предел
+        upper = min(q3 + multiplier * iqr, 10_000)
         lower = max(q1 - multiplier * iqr, 1)
         mask &= (df[col] >= lower) & (df[col] <= upper)
     return df[mask].reset_index(drop=True)
@@ -74,18 +69,6 @@ def main():
     ]
 
     # Фильтрация выбросов
-
-    # df_holder = Pipe(df)
-
-    
-    # df_holder = (
-    #     df_holder | clean.lower_columns | clean.drop_na | clean.filter_outliers
-    # )
-
-
-    # df_holder = df_holder | clean.add_computed_columns | clean.add_weekday
-
-    # df = df_holder.get()
     initial_len = len(df)
     df = filter_outliers_iqr_all(df, cols_to_clean, multiplier=1.5)
     removed = initial_len - len(df)
