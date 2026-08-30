@@ -1,6 +1,8 @@
+import msvcrt
 from functools import partial
 from pathlib import Path
 
+import pandas as pd
 from IPython.display import display
 from rich.console import Console
 from rich.panel import Panel
@@ -24,8 +26,13 @@ WAIT_FOR_INPUT = True
 
 def main() -> None:
     print("Добрый день.")
-    print("Ввод чтобы начать")
-    input()
+
+    print("Нажмите Enter или Space")
+    key = msvcrt.getch()
+    if key == b"\r":  # Enter
+        WAIT_FOR_INPUT = True
+    elif key == b" ":  # Space
+        WAIT_FOR_INPUT = False
 
     if not PARQUET_PATH.exists():
         load.json_to_parquet(SRC_DATA, PARQUET_PATH)
@@ -43,7 +50,7 @@ def main() -> None:
 
     df = df_holder.get()
 
-    with step("Анализ", True):
+    with step("Анализ", WAIT_FOR_INPUT):
         stats = analysis.summary_stats(df)
         by_weekday = analysis.calories_by_weekday(df)
         by_category = analysis.macros_by_category(df)
@@ -58,10 +65,10 @@ def main() -> None:
     print_table(by_weekday, "Калории по дням недели")
     print_table(by_category, "Макронутриенты по категориям")
     print_table(by_protein, "Анализ белка")
-    print_table(norm_cat, "Нормализация на 1000 ккал по категориям")
-    print_table(norm_weekday, "Нормализация на 1000 ккал по дням недели")
+    print_table(norm_cat, "Доля калорий из макронутриентов по категориям")
+    print_table(norm_weekday, "Доля калорий из макронутриентов по дням недели")
 
-    with step("6. Экспорт в Excel с диаграммами", True):
+    with step("Экспорт в Excel с диаграммами", WAIT_FOR_INPUT):
         excel_utils.export_to_excel(
             df,
             stats,
@@ -78,7 +85,7 @@ def main() -> None:
     print("Готово! Все отчёты в папке", REPORTS_DIR)
 
 
-import pandas as pd
+
 
 
 def print_table(df: pd.DataFrame, title: str):

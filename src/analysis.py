@@ -119,29 +119,74 @@ def summary_stats(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def normalized_by_category(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Средний состав рациона по категориям калорийности:
+    доля калорий (%) из жиров/углеводов/белков + средняя калорийность.
+    Параметры суммируются в понятную картину "из чего состоят калории".
+    """
     result = (
         df.groupby("cal_category", as_index=False)
         .agg(
-            mean_fat_per_1k=("fat_per_1k", "mean"),
-            mean_carbs_per_1k=("carbs_per_1k", "mean"),
-            mean_protein_per_1k=("protein_per_1k", "mean"),
+            mean_calories=("calories", "mean"),
+            pct_fat=("pct_cal_fat", "mean"),
+            pct_carbs=("pct_cal_carbs", "mean"),
+            pct_protein=("pct_cal_protein", "mean"),
             count=("calories", "count"),
         )
-        .sort_values("mean_fat_per_1k")
+        .sort_values("mean_calories")
     )
+    return _format_composition(result)
+
+
+def _format_composition(result: pd.DataFrame) -> pd.DataFrame:
+    result["mean_calories"] = result["mean_calories"].round(1)
+    for col in ["pct_fat", "pct_carbs", "pct_protein"]:
+        result[col] = result[col].round(1)
+    result["count"] = result["count"].astype(int)
     return result
 
-
-def normalized_by_weekday(df: pd.DataFrame) -> pd.DataFrame:
+def normalized_groued_by_category(df: pd.DataFrame) -> pd.DataFrame:
+    
+    for col in ["fat_per_1k", "carbs_per_1k", "protein_per_1k"]:
+        df[f"{col}_norm"] = df.groupby("cal_category")[col].transform(
+            lambda x: (x - x.mean()) / x.std() if x.std() != 0 else 0
+        )
+        
     result = (
-        df.groupby("weekday", as_index=False)
+        df.groupby('cal_category', as_index=False)
         .agg(
             mean_fat_per_1k=("fat_per_1k", "mean"),
             mean_carbs_per_1k=("carbs_per_1k", "mean"),
             mean_protein_per_1k=("protein_per_1k", "mean"),
+            count=("calories", "count"),)
+        .rename(columns={
+            'fat_per_1k': 'mean_fat_per_1k',
+            'carbs_per_1k': 'mean_carbs_per_1k',
+            'protein_per_1k': 'mean_protein_per_1k',
+            'fat_per_1k_norm': 'mean_fat_norm',
+            'carbs_per_1k_norm': 'mean_carbs_norm',
+            'protein_per_1k_norm': 'mean_protein_norm',
+            'calories': 'count'
+        })
+        .sort_values('mean_fat_per_1k'))
+    
+    return result
+
+def normalized_by_weekday(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Средний состав рациона по дням недели:
+    доля калорий (%) из жиров/углеводов/белков + средняя калорийность.
+    """
+    result = (
+        df.groupby("weekday", as_index=False)
+        .agg(
+            mean_calories=("calories", "mean"),
+            pct_fat=("pct_cal_fat", "mean"),
+            pct_carbs=("pct_cal_carbs", "mean"),
+            pct_protein=("pct_cal_protein", "mean"),
             count=("calories", "count"),
         )
         .sort_values("weekday")
     )
     result["weekday_name"] = result["weekday"].map(WEEKDAY_NAMES)
-    return result
+    return _format_composition(result)
