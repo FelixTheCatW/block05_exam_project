@@ -9,10 +9,11 @@ from rich.panel import Panel
 from rich.table import Table
 
 import src.clean_data as clean
+import src.excel_charts as chart
 import src.load_data as load
 from src import analysis
-from src.utils import excel_utils
 from src.utils.pipe import Pipe
+from src.utils.report_writer import ReportWriter, write_table
 from src.utils.step import step
 
 console = Console()
@@ -59,7 +60,7 @@ def main() -> None:
         by_category = analysis.macros_by_category(df)
         by_protein = analysis.protein_analysis(df)
         pivot_cat = analysis.pivot_weekday_category(df)
-        pivot_prot = analysis.pivot_weekday_protein(df)
+        pivot_protein = analysis.pivot_weekday_protein(df)
         corr = analysis.correlation_matrix(df)
         norm_cat = analysis.normalized_by_category(df)
         norm_weekday = analysis.normalized_by_weekday(df)
@@ -72,19 +73,62 @@ def main() -> None:
     print_table(norm_weekday, "Доля калорий из макронутриентов по дням недели")
 
     with step("Экспорт в Excel с диаграммами", WAIT_FOR_INPUT):
-        excel_utils.export_to_excel(
-            df,
-            sample_200,
-            stats,
-            by_weekday,
-            by_category,
-            pivot_cat,
-            pivot_prot,
-            corr,
-            norm_cat,
-            norm_weekday,
-            REPORTS_DIR / "analysis_report.xlsx",
-        )
+        with ReportWriter(REPORTS_DIR / "report.xlsx") as rw:
+            (
+                rw.pipe
+                | partial(write_table, stats, "Статистика")
+                | chart.chart_calorie_distribution                
+            )
+            
+            chart.write_calorie_bins(stats, "Статистика", rw.writer)
+            # write_table(stats, "Статистика", rw.writer)
+            # chart.chart_calorie_distribution(rw.writer.sheets["Статистика"])
+            # chart.write_calorie_bins(rw.writer, "Статистика", df)
+
+            (
+                rw.pipe
+                | partial(write_table, by_weekday, "По дням недели")
+                | chart.chart_by_weekday
+            )
+
+            (
+                rw.pipe
+                | partial(write_table, by_category, "По категориям")
+                | chart.chart_by_category
+                | chart.chart_category_pie
+            )
+
+            (
+                rw.pipe
+                | partial(write_table, norm_cat, "Нормализация категорий")
+                | chart.chart_norm_cat
+            )
+
+            (
+                rw.pipe
+                | partial(write_table, norm_weekday, "Распред. по дням")
+                | chart.chart_norm_weekday
+            )
+
+            (
+                rw.pipe
+                | partial(write_table, pivot_cat, "Сводная по категориям")
+                | chart.chart_pivot_day_cat
+            )
+
+            (
+                rw.pipe
+                | partial(write_table, pivot_protein, "Белок")
+                | chart.chart_pivot_day_protein
+            )
+
+            write_table(corr, "Корреляция", rw.writer)
+
+            (
+                rw.pipe
+                | partial(write_table, sample_200, "Первые 200")
+                | chart.chart_scatter_calories_protein
+            )
 
     print("Готово ☻")
 
