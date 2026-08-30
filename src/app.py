@@ -78,13 +78,9 @@ def main() -> None:
                 rw.pipe
                 | partial(write_table, stats, "Статистика")
                 | chart.chart_calorie_distribution                
-            )
-            
+            )           
             chart.write_calorie_bins(stats, "Статистика", rw.writer)
-            # write_table(stats, "Статистика", rw.writer)
-            # chart.chart_calorie_distribution(rw.writer.sheets["Статистика"])
-            # chart.write_calorie_bins(rw.writer, "Статистика", df)
-
+            
             (
                 rw.pipe
                 | partial(write_table, by_weekday, "По дням недели")
