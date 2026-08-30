@@ -42,12 +42,15 @@ def export_to_excel(
         )
         chart.chart_pivot_day_protein(writer.sheets["Белок"], pivot_protein.shape[0])
         chart.chart_calorie_distribution(writer.sheets["Статистика"], 6)
-
-        sample_200 = df.head(200)
-        sample_200.to_excel(writer, sheet_name="Данные (первые 200)")
+        
+        exclude_cols = ['fiber', 'potass.', 'iron', 'calcium', 'sat fat', 'chol', 'vit a', 'vit c', 'trn fat', 'mon fat', 'ply fat']
+        sample_200 = df.head(200).drop(columns=[col for col in exclude_cols if col in df.columns], errors='ignore')
+        sample_200.to_excel(writer, sheet_name="Первые 200")
         chart.chart_scatter_calories_protein(
-            writer.sheets["Данные (первые 200)"], sample_200.shape[0]
+            writer.sheets["Первые 200"], sample_200.shape[0]
         )
+
+    chart.style_scatter_chart(output_path)
 
     print(f"Отчёт с диаграммами сохранён:\n{output_path}")
 
