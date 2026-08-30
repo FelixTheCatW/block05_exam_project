@@ -15,11 +15,11 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 WS_ANCHOR = "E11"
 
-SCATTER_BG = "0E0E0E"        # фон диаграммы (почти чёрный)
-SCATTER_PLOT_BG = "171B1F"   # фон области построения
-SCATTER_GRID = "39414A"      # линии сетки
-SCATTER_TEXT = "D7DEE5"      # текст осей и заголовка
-SCATTER_POINT = "00E5FF"     # цвет точек (неоновый циан)
+SCATTER_BG = "0E0E0E"  # фон диаграммы (почти чёрный)
+SCATTER_PLOT_BG = "171B1F"  # фон области построения
+SCATTER_GRID = "39414A"  # линии сетки
+SCATTER_TEXT = "D7DEE5"  # текст осей и заголовка
+SCATTER_POINT = "00E5FF"  # цвет точек (неоновый циан)
 
 
 def _style(title: str, chart) -> None:
@@ -43,10 +43,7 @@ def set_axis_title(axis, title: str, font_size: int = 1400) -> None:
     axis.title.overlay = False
 
 
-def chart_by_weekday(
-    ws: Worksheet,
-    n: int,
-) -> None:
+def chart_by_weekday(ws: Worksheet) -> None:
     chart = BarChart()
     chart.type = "col"
     data = Reference(ws, min_col=2, max_col=3, min_row=1, max_row=8)
@@ -60,10 +57,7 @@ def chart_by_weekday(
     ws.add_chart(chart, WS_ANCHOR)
 
 
-def chart_by_category(
-    ws: Worksheet,
-    n: int,
-) -> None:
+def chart_by_category(ws: Worksheet) -> None:
     chart = BarChart()
     chart.type = "col"
     data = Reference(ws, min_col=3, max_col=5, min_row=1, max_row=4)
@@ -74,12 +68,10 @@ def chart_by_category(
     chart.x_axis.title = "Категория"
     _style("Средние макронутриенты по категориям", chart)
     ws.add_chart(chart, WS_ANCHOR)
+    return ws
 
 
-def chart_category_pie(
-    ws: Worksheet,
-    n: int,
-) -> None:
+def chart_category_pie(ws: Worksheet) -> None:
     pie = PieChart()
     # pie.title = "Доля записей по категориям калорийности"
     pie.style = 13
@@ -95,14 +87,11 @@ def chart_category_pie(
     pie.add_data(data, titles_from_data=True)
     pie.set_categories(cats)
     pie.height = 8
-    pie.width = 12    
+    pie.width = 12
     ws.add_chart(pie, "N4")
 
 
-def chart_norm_cat(
-    ws: Worksheet,
-    n: int,
-) -> None:
+def chart_norm_cat(ws: Worksheet) -> None:
     chart = BarChart()
     chart.type = "col"
     chart.grouping = "percentStacked"
@@ -116,10 +105,7 @@ def chart_norm_cat(
     ws.add_chart(chart, WS_ANCHOR)
 
 
-def chart_norm_weekday(
-    ws: Worksheet,
-    n: int,
-) -> None:
+def chart_norm_weekday(ws: Worksheet) -> None:
     chart = BarChart()
     chart.type = "col"
     chart.grouping = "percentStacked"
@@ -133,10 +119,7 @@ def chart_norm_weekday(
     ws.add_chart(chart, WS_ANCHOR)
 
 
-def chart_pivot_day_cat(
-    ws: Worksheet,
-    n: int,
-) -> None:
+def chart_pivot_day_cat(ws: Worksheet) -> None:
     chart = BarChart()
     chart.type = "col"
     data = Reference(ws, min_col=1, max_col=3, min_row=1, max_row=8)
@@ -148,10 +131,7 @@ def chart_pivot_day_cat(
     ws.add_chart(chart, WS_ANCHOR)
 
 
-def chart_pivot_day_protein(
-    ws: Worksheet,
-    n: int,
-) -> None:
+def chart_pivot_day_protein(ws: Worksheet) -> None:
     chart = BarChart()
     chart.type = "col"
     data = Reference(ws, min_col=2, max_col=3, min_row=1, max_row=8)
@@ -163,10 +143,7 @@ def chart_pivot_day_protein(
     ws.add_chart(chart, WS_ANCHOR)
 
 
-def chart_calorie_distribution(
-    ws: Worksheet,
-    n: int,
-) -> None:
+def chart_calorie_distribution(ws: Worksheet) -> None:
     header_row = 14
     data_first = header_row + 1
     data_last = header_row + 6
@@ -182,7 +159,7 @@ def chart_calorie_distribution(
     ws.add_chart(chart, WS_ANCHOR)
 
 
-def chart_scatter_calories_protein(ws: Worksheet, n: int) -> None:
+def chart_scatter_calories_protein(ws: Worksheet) -> None:
     headers = {
         cell.value: cell.column
         for cell in ws[1]
@@ -192,8 +169,8 @@ def chart_scatter_calories_protein(ws: Worksheet, n: int) -> None:
         return
     chart = ScatterChart()
     chart.title = "Калории x белок (первые 200 записей)"
-    xvalues = Reference(ws, min_col=headers["calories"], min_row=2, max_row=n + 1)
-    yvalues = Reference(ws, min_col=headers["protein"], min_row=1, max_row=n + 1)
+    xvalues = Reference(ws, min_col=headers["calories"], min_row=2, max_row=201)
+    yvalues = Reference(ws, min_col=headers["protein"], min_row=1, max_row=201)
     series = SeriesFactory(yvalues, xvalues=xvalues, title_from_data=True)
     series.marker = Marker(symbol="circle", size=3)
     series.marker.spPr = GraphicalProperties(
@@ -215,10 +192,7 @@ def chart_scatter_calories_protein(ws: Worksheet, n: int) -> None:
 
 
 def write_calorie_bins(
-    writer: pd.ExcelWriter,
-    sheet_name: str,
-    df: pd.DataFrame,
-    start_row: int,
+    writer: pd.ExcelWriter, sheet_name: str, df: pd.DataFrame
 ) -> None:
     labels = ["0-500", "500-1000", "1000-1500", "1500-2000", "2000-2500", "2500-3000"]
     cal_range = pd.cut(
@@ -340,9 +314,8 @@ def style_scatter_chart(path: str | Path) -> None:
             continue
         root = ET.fromstring(data)
         _style_scatter_root(root)
-        xml = (
-            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
-            + ET.tostring(root, encoding="unicode")
+        xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + ET.tostring(
+            root, encoding="unicode"
         )
         payload[name] = xml.encode("utf-8")
         changed = True

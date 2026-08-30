@@ -43,7 +43,9 @@ def main() -> None:
     df_holder = Pipe(df)
 
     with step("Очистка данных", WAIT_FOR_INPUT):
-        df_holder = df_holder | clean.lower_columns | clean.drop_na | clean.filter_outliers
+        df_holder = (
+            df_holder | clean.lower_columns | clean.drop_na | clean.filter_outliers
+        )
 
     with step("Вычисляемые колонки", WAIT_FOR_INPUT):
         df_holder = df_holder | clean.add_computed_columns | clean.add_weekday
@@ -51,6 +53,7 @@ def main() -> None:
     df = df_holder.get()
 
     with step("Анализ", WAIT_FOR_INPUT):
+        sample_200 = df.head(200)[["date", "calories", "carbs", "fat", "protein"]]
         stats = analysis.summary_stats(df)
         by_weekday = analysis.calories_by_weekday(df)
         by_category = analysis.macros_by_category(df)
@@ -71,6 +74,7 @@ def main() -> None:
     with step("Экспорт в Excel с диаграммами", WAIT_FOR_INPUT):
         excel_utils.export_to_excel(
             df,
+            sample_200,
             stats,
             by_weekday,
             by_category,
@@ -82,10 +86,7 @@ def main() -> None:
             REPORTS_DIR / "analysis_report.xlsx",
         )
 
-    print("Готово! Все отчёты в папке", REPORTS_DIR)
-
-
-
+    print("Готово ☻")
 
 
 def print_table(df: pd.DataFrame, title: str):
